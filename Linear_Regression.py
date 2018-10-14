@@ -1,5 +1,10 @@
 import numpy
-from sklearn import preprocessing
+import os
+import sys
+import subprocess
+
+if os.geteuid() != 0:
+    os.execvp('sudo', ['sudo', 'python'] + sys.argv)
 
 def Import_Data(filename):
    training_data_filename = filename
@@ -11,7 +16,6 @@ def Import_Data(filename):
    with open(training_data_filename, "r") as file:
       for line in file:
          row = numpy.array([1])
-         print(line.split("\t"))
          temp_list = list(map(float, line.rstrip().split("\t")))
          Y = numpy.append(Y, temp_list[n-1:])
          row = numpy.append(row, temp_list[0:-1])
@@ -25,11 +29,6 @@ def Import_Data(filename):
       stdev = numpy.append(stdev, X[:,i].std())
       if(stdev[i] != 0):
          X[:,i] = [value - mean[i] for value in X[:,i]] / stdev[i]
-   mean = numpy.append(mean, Y.mean())
-   stdev = numpy.append(stdev, Y.std())
-   if(stdev[n] != 0):
-      Y = [value - mean[n] for value in Y] / stdev[n]
-
    return m, n, X, Y, mean, stdev
 
 def dJ(theta, m, n, X, Y):
@@ -53,7 +52,7 @@ while True:
    print(theta)
    stop = True
    for i in range(0, n):
-      if abs((theta[i] - last_theta[i])/theta[i]) < .0000001:
+      if abs((theta[i] - last_theta[i])/theta[i]) < .001:
          fakeCode=stop
       else:
          stop = False
@@ -61,14 +60,16 @@ while True:
          print("Alpha is too large")
          break
    if stop:
-      print("X")
-      print(X)
-      print("Y")
-      print(Y)
       print("Thetas")
       print(theta)
       print("Means")
       print(mean)
       print("Stdevs")
       print(stdev)
+      print("Writing Thetas to File...")
+
+      with open("theta_data.txt", "w") as output:
+          for number in theta:
+              output.write(str(number)+"\n")
+      print("Writing Done")
       break
